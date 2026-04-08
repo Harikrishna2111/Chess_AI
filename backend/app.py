@@ -485,6 +485,14 @@ TOKENIZER, MODEL = _load_model()
 
 
 def _select_move_with_model(board: chess.Board, moves: list[str], difficulty: int = 0) -> str:
+    """
+    Select a move using bidirectional search around difficulty offset.
+    Mimics chess-llama's logic for better move selection.
+    
+    Higher difficulty = weaker AI (searches further from top-ranked moves)
+    difficulty=0: only top-ranked moves
+    difficulty=5: searches rank 0-5, then beyond if no legal move found
+    """
     if TOKENIZER is None or MODEL is None:
         raise RuntimeError("Model is not available")
 
@@ -501,16 +509,30 @@ def _select_move_with_model(board: chess.Board, moves: list[str], difficulty: in
     sorted_ids = sorted_ids[0]
 
     legal_moves = {m.uci() for m in board.legal_moves}
-    start = difficulty if 0 <= difficulty < len(sorted_ids) else 0
-
-    for i in range(start, len(sorted_ids)):
+    vocab_size = len(sorted_ids)
+    
+    # Clamp difficulty to valid range
+    mid = max(0, min(difficulty, vocab_size - 1))
+    
+    # Bidirectional search: backward from mid to 0
+    for i in range(mid, -1, -1):
         token_id = sorted_ids[i].item()
         move = TOKENIZER.decode([token_id]).strip()
-        if len(move) < 4:
-            continue
-        move = move[:4]
-        if move in legal_moves:
-            return move
+        if len(move) >= 4:
+            move = move[:4]
+            if move in legal_moves:
+                return move
+    
+    # Forward search from mid+1 to end
+    for i in range(mid + 1, vocab_size):
+        token_id = sorted_ids[i].item()
+        move = TOKENIZER.decode([token_id]).strip()
+        if len(move) >= 4:
+            move = move[:4]
+            if move in legal_moves:
+                return move
+    
+    # Fallback: return first legal move
     print("moved")
     return next(iter(legal_moves))
 
@@ -521,6 +543,9 @@ def _fallback_move(board: chess.Board) -> str:
     if not legal:
         raise ValueError("No legal moves available")
     return legal[0].uci()
+
+
+
 
 
 @app.get("/")
@@ -668,16 +693,10 @@ def auth_login():
 def get_move():
     payload = request.get_json(silent=True) or {}
     moves = payload.get("moves", [])
-    difficulty = payload.get("difficulty", 0)
     print("asked for move")
 
     if not isinstance(moves, list) or any(not isinstance(move, str) for move in moves):
         return jsonify({"detail": "moves must be a list of UCI strings"}), 400
-
-    try:
-        difficulty = int(difficulty or 0)
-    except (TypeError, ValueError):
-        difficulty = 0
 
     board = chess.Board()
     try:
@@ -690,7 +709,7 @@ def get_move():
         return jsonify({"detail": "Game is already over"}), 400
 
     try:
-        move = _select_move_with_model(board, moves, difficulty)
+        move = _select_move_with_model(board, moves, difficulty=0)
     except Exception as exc:
         print(f"Model inference failed, using fallback move: {exc}")
         try:
