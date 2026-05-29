@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE_URL = "https://chessai-production-7a16.up.railway.app";
 
 const THEME_COLORS = {
   boardLight: "#f8f2ee",
