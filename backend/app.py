@@ -17,7 +17,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": ["http://localhost:5173"]}})
+CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "https://chess-ai-swart.vercel.app"]}})
 
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
