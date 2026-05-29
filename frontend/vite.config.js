@@ -11,11 +11,11 @@ export default defineConfig({
     ],
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:5000',
+        target: 'https://chessai-production-7a16.up.railway.app/',
         changeOrigin: true,
       },
       '/login': {
-        target: 'http://127.0.0.1:5000',
+        target: 'https://chessai-production-7a16.up.railway.app/',
         changeOrigin: true,
       }
     }
