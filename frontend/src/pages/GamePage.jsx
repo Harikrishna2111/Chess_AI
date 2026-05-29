@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 
-const API_BASE_URL = "https://chessai-production-7a16.up.railway.app";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const THEME_COLORS = {
   primary: "#ec5b13",
