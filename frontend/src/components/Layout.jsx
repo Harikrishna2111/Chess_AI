@@ -15,7 +15,7 @@ export default function Layout() {
   const navItems = [
     { label: "Dashboard", endpoint: "/dashboard", active: activePage === "/dashboard" },
     { label: "Play Game", endpoint: "/game", active: activePage === "/game" },
-    { label: "Opponent Profile", endpoint: "/profile", active: activePage === "/profile" },
+    { label: "My Profile", endpoint: "/profile", active: activePage === "/profile" },
     { label: "Game History", endpoint: "/history", active: activePage === "/history" },
   ];
 
@@ -68,9 +68,6 @@ export default function Layout() {
                   Logout
                 </button>
               )}
-              <button className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-primary/10 rounded-full">
-                <span className="material-symbols-outlined">notifications</span>
-              </button>
               <div className="flex items-center gap-2 cursor-pointer group">
                 <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden border border-primary/30 text-primary font-bold">
                   {userName.substring(0, 2).toUpperCase()}
@@ -86,32 +83,7 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <footer className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-slate-200 dark:border-primary/10">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2 opacity-50">
-            <div className="w-6 h-6 bg-slate-400 rounded-sm flex items-center justify-center text-white">
-              <span className="material-symbols-outlined text-sm">grid_view</span>
-            </div>
-            <span className="text-sm font-bold">
-              Adaptive Chess AI &copy; {new Date().getFullYear()}
-            </span>
-          </div>
-          <div className="flex gap-8 text-sm text-slate-500 dark:text-slate-400">
-            <a className="hover:text-primary transition-colors" href="#">
-              Documentation
-            </a>
-            <a className="hover:text-primary transition-colors" href="#">
-              Privacy Policy
-            </a>
-            <a className="hover:text-primary transition-colors" href="#">
-              Terms of Service
-            </a>
-            <a className="hover:text-primary transition-colors" href="#">
-              Support
-            </a>
-          </div>
-        </div>
-      </footer>
+
     </div>
   );
 }

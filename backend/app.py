@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import os
 from io import StringIO
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+UTC = timezone.utc
 from urllib.parse import quote_plus
 
 import chess

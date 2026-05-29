@@ -21,7 +21,20 @@ export default function GamePage() {
   const [lastAiMove, setLastAiMove] = useState("--");
   const [optionSquares, setOptionSquares] = useState({});
   const [pieceSquare, setPieceSquare] = useState("");
+  const [moveTimestamps, setMoveTimestamps] = useState([Date.now()]);
   const gameEndRecordedRef = useRef(false);
+
+  function recordMoveTimestamp() {
+    setMoveTimestamps((prev) => [...prev, Date.now()]);
+  }
+
+  function formatMoveTime(ms) {
+    const s = Math.round(ms / 1000);
+    if (s < 60) return `${s}s`;
+    const m = Math.floor(s / 60);
+    const rem = s % 60;
+    return `${m}:${rem.toString().padStart(2, "0")}`;
+  }
 
   const getElapsedSeconds = () => Math.max(0, 1200 - (whiteTime + blackTime));
 
@@ -150,6 +163,7 @@ export default function GamePage() {
 
       setGame(gameCopy);
       setLastAiMove(aiMoveRes.san);
+      recordMoveTimestamp();
     } catch (error) {
       console.warn("AI move fetch failed. Falling back to random move.", error);
       const possibleMoves = game.moves();
@@ -162,6 +176,7 @@ export default function GamePage() {
         if (aiMoveRes) {
           setGame(gameCopy);
           setLastAiMove(aiMoveRes.san);
+          recordMoveTimestamp();
         }
       }
     } finally {
@@ -202,6 +217,7 @@ export default function GamePage() {
         setGame(gameCopy);
         setOptionSquares({});
         setPieceSquare("");
+        recordMoveTimestamp();
         return true;
       }
     } catch (e) {
@@ -261,6 +277,7 @@ export default function GamePage() {
           setGame(gameCopy);
           setOptionSquares({});
           setPieceSquare("");
+          recordMoveTimestamp();
           return;
         }
       } catch (e) {
@@ -295,6 +312,7 @@ export default function GamePage() {
     setIsAiThinking(false);
     setOptionSquares({});
     setPieceSquare("");
+    setMoveTimestamps([Date.now()]);
     gameEndRecordedRef.current = false;
   }
 
@@ -310,14 +328,20 @@ export default function GamePage() {
   else if (game.isDraw()) gameStatus = "Draw";
   else if (whiteTime === 0 || blackTime === 0) gameStatus = "Time Out";
 
-  // Build Move History
+  // Build Move History with per-move time
   const historyRaw = game.history();
   const movePairs = [];
   for (let i = 0; i < historyRaw.length; i += 2) {
+    const whiteTs = moveTimestamps[i];
+    const blackTs = moveTimestamps[i + 1];
+    const whiteNextTs = moveTimestamps[i + 1];
+    const blackNextTs = moveTimestamps[i + 2];
     movePairs.push({
       number: Math.floor(i / 2) + 1,
       white: historyRaw[i],
-      black: historyRaw[i + 1] || "..."
+      whiteTime: whiteTs && whiteNextTs ? formatMoveTime(whiteNextTs - whiteTs) : null,
+      black: historyRaw[i + 1] || null,
+      blackTime: blackTs && blackNextTs ? formatMoveTime(blackNextTs - blackTs) : null,
     });
   }
 
@@ -408,7 +432,9 @@ export default function GamePage() {
                   <tr>
                     <th className="p-2 font-medium">#</th>
                     <th className="p-2 font-medium">White</th>
+                    <th className="p-2 font-medium text-slate-300 dark:text-slate-500">⏱</th>
                     <th className="p-2 font-medium">Black</th>
+                    <th className="p-2 font-medium text-slate-300 dark:text-slate-500">⏱</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50 dark:divide-slate-700/50">
@@ -420,8 +446,14 @@ export default function GamePage() {
                         <td className={`p-2 ${isLast && game.turn() === 'b' ? "font-bold text-primary" : "font-medium text-slate-700 dark:text-slate-300"}`}>
                           {move.white}
                         </td>
+                        <td className="p-2 text-xs text-slate-400 dark:text-slate-500 font-mono">
+                          {move.whiteTime ?? ""}
+                        </td>
                         <td className={`p-2 ${isLast && game.turn() === 'w' ? "font-bold text-primary" : "font-medium text-slate-700 dark:text-slate-300"}`}>
-                          {move.black}
+                          {move.black ?? "..."}
+                        </td>
+                        <td className="p-2 text-xs text-slate-400 dark:text-slate-500 font-mono">
+                          {move.blackTime ?? ""}
                         </td>
                       </tr>
                     );
@@ -431,19 +463,6 @@ export default function GamePage() {
             </div>
           </div>
 
-          <div className="bg-primary/10 dark:bg-primary/5 p-5 rounded-xl border border-primary/20">
-            <div className="flex items-center gap-3">
-              <div className="bg-primary rounded-lg p-2 text-white">
-                <span className="material-symbols-outlined text-xl">smart_toy</span>
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-primary uppercase tracking-wider">Last AI Move</p>
-                <p className="text-xl font-mono font-bold text-slate-900 dark:text-white">
-                  {lastAiMove}
-                </p>
-              </div>
-            </div>
-          </div>
 
           <div className="grid grid-cols-2 gap-3">
             <button
@@ -453,11 +472,8 @@ export default function GamePage() {
               <span className="material-symbols-outlined">restart_alt</span>
               Restart Game
             </button>
-            <button onClick={undoMove} className="py-2.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-xl transition-all flex items-center justify-center gap-2">
-              <span className="material-symbols-outlined text-lg">undo</span>
-              Undo
-            </button>
-            <button onClick={resignGame} className="py-2.5 bg-slate-200 dark:bg-slate-700 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 text-slate-700 dark:text-slate-200 font-semibold rounded-xl transition-all flex items-center justify-center gap-2">
+
+            <button onClick={resignGame} className="col-span-2 py-2.5 bg-slate-200 dark:bg-slate-700 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 text-slate-700 dark:text-slate-200 font-semibold rounded-xl transition-all flex items-center justify-center gap-2">
               <span className="material-symbols-outlined text-lg">flag</span>
               Resign
             </button>
