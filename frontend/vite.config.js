@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+const API_URL = process.env.VITE_API_URL || 'http://localhost:5000/'
+
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -11,11 +13,11 @@ export default defineConfig({
     ],
     proxy: {
       '/api': {
-        target: 'https://chessai-production-7a16.up.railway.app/',
+        target: API_URL,
         changeOrigin: true,
       },
       '/login': {
-        target: 'https://chessai-production-7a16.up.railway.app/',
+        target: API_URL,
         changeOrigin: true,
       }
     }
