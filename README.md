@@ -1,3 +1,6 @@
+LIVE LINK : https://chess-ai-2-35h2.onrender.com/
+
+
 # Chess Llama (Chess AI)
 
 Welcome to **Chess Llama**, an intelligent Chess AI application leveraging a local autoregressive language model (LLM) for move prediction and an advanced, modern React frontend. This project tracks user stats, game history, and dynamically computes player analytics (such as "Tactical Aggression" and "Positional Patience") using MongoDB.
